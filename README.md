@@ -63,6 +63,10 @@ The goal is to eliminate the confusion around multiple deadlines and event overl
 
 ---
 
+CONTRACT DETAILS
+<img width="1919" height="928" alt="image" src="https://github.com/user-attachments/assets/303d183f-2075-4899-a4f1-67eef37dabef" />
+Contract Key: CC7D7MWQ4UMBQZU7QEJNQ2DI3BQE46HT5TXX5SYQA5X2Q5BVDPTVTR5S
+
 ## ⚙️ Setup Instructions
 
 ### Backend
@@ -72,4 +76,3 @@ cargo run
 
 
 
-<img width="1919" height="928" alt="image" src="https://github.com/user-attachments/assets/303d183f-2075-4899-a4f1-67eef37dabef" />

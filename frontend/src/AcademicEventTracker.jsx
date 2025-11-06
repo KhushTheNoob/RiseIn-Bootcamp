@@ -69,19 +69,34 @@ const AcademicEventTracker = () => {
   setChatMessages(prev => [...prev, userMessage]);
   setChatInput('');
 
-  try {
-    const res = await fetch('http://localhost:8080/api/ollama', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: chatInput })
-    });
+    try {
+      // Match backend route and payload shape
+      const res = await fetch('http://localhost:8080/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: chatInput })
+      });
 
-    if (!res.ok) throw new Error('Failed to reach backend');
+      if (!res.ok) throw new Error('Failed to reach backend: ' + res.status);
 
-    const data = await res.json();
-    const botResponse = { role: 'bot', content: data.response || 'No response received.' };
-    setChatMessages(prev => [...prev, botResponse]);
-  } catch (err) {
+      const data = await res.json();
+      // backend returns { reply: string, extracted_event?: { title, event_type, date, description } }
+      const botText = data.reply || data.response || 'No response received.';
+      const botResponse = { role: 'bot', content: botText };
+      setChatMessages(prev => [...prev, botResponse]);
+
+      // If backend extracted an event, add it to local events list
+      if (data.extracted_event) {
+        const ev = data.extracted_event;
+        setEvents(prev => [...prev, {
+          id: Date.now(),
+          title: ev.title || 'Untitled Event',
+          type: ev.event_type || 'workshop',
+          date: ev.date || new Date().toISOString().slice(0,10),
+          description: ev.description || ''
+        }]);
+      }
+    } catch (err) {
     const botResponse = { role: 'bot', content: '⚠️ Error connecting to AI backend.' };
     setChatMessages(prev => [...prev, botResponse]);
     console.error(err);
@@ -143,15 +158,25 @@ const AcademicEventTracker = () => {
       {/* Header */}
       <header className="relative z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center transform transition-all duration-300 group-hover:rotate-12 group-hover:scale-110 shadow-lg">
-              <Calendar className="w-7 h-7 text-white" />
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              {/* Larger logo with visible colored background and fallback to SVG if PNG missing */}
+              <div className="w-20 h-20 rounded-xl shadow-lg transform transition-all duration-300 group-hover:rotate-3 group-hover:scale-105 flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-600 p-1">
+                <div className="bg-white rounded-lg w-full h-full flex items-center justify-center">
+                  <img
+                    src="/risein-instagram.png"
+                    alt="RiseIn Web3 logo"
+                    className="object-contain w-14 h-14"
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/risein-logo3.svg'; }}
+                  />
+                </div>
+              </div>
+
+              <h1 className="text-2xl font-bold text-black tracking-tight">
+                Campus<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Sync</span>
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold text-black tracking-tight">
-              Academic<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Hub</span>
-            </h1>
           </div>
-        </div>
       </header>
 
       {/* Main Content */}

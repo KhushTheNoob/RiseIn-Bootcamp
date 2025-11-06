@@ -62,23 +62,31 @@ const AcademicEventTracker = () => {
     setEvents(events.filter(e => e.id !== id));
   };
 
-  const handleChatSend = () => {
-    if (!chatInput.trim()) return;
-    
-    const userMessage = { role: 'user', content: chatInput };
-    setChatMessages([...chatMessages, userMessage]);
-    
-    // Simple bot response (you'll replace this with actual AI)
-    setTimeout(() => {
-      const botResponse = { 
-        role: 'bot', 
-        content: "I can help you add events! Try saying: 'Add a Web Dev workshop on 2025-11-15' or 'Schedule a Math test for next Monday'"
-      };
-      setChatMessages(prev => [...prev, botResponse]);
-    }, 500);
-    
-    setChatInput('');
-  };
+  const handleChatSend = async () => {
+  if (!chatInput.trim()) return;
+
+  const userMessage = { role: 'user', content: chatInput };
+  setChatMessages(prev => [...prev, userMessage]);
+  setChatInput('');
+
+  try {
+    const res = await fetch('http://localhost:8080/api/ollama', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: chatInput })
+    });
+
+    if (!res.ok) throw new Error('Failed to reach backend');
+
+    const data = await res.json();
+    const botResponse = { role: 'bot', content: data.response || 'No response received.' };
+    setChatMessages(prev => [...prev, botResponse]);
+  } catch (err) {
+    const botResponse = { role: 'bot', content: '⚠️ Error connecting to AI backend.' };
+    setChatMessages(prev => [...prev, botResponse]);
+    console.error(err);
+  }
+};
 
   const groupedEvents = groupEventsByDate();
 
